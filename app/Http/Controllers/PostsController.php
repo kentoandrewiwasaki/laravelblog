@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Category;
 use App\Post;
+use App\Tag;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\Posts\CreatePostsRequest;
@@ -35,7 +36,7 @@ class PostsController extends Controller
      */
     public function create()
     {
-        return view('posts.create')->with('categories', Category::all());
+        return view('posts.create')->with('categories', Category::all())->with('tags', Tag::all());
     }
 
     /**
@@ -47,7 +48,7 @@ class PostsController extends Controller
     public function store(CreatePostsRequest $request)
     {
         $image = $request->image->store('posts');
-        Post::create([
+        $post = Post::create([
             'title' => $request->title,
             'description' => $request->description,
             'content' => $request->content,
@@ -55,6 +56,11 @@ class PostsController extends Controller
             'published_at' => $request->published_at,
             'category_id' => $request->category
         ]);
+
+        if($request->tags){
+            $post->tags()->attach($request->tags);
+        }
+
         session()->flash('success', 'Post Created Successfully.');
         return redirect(route('posts.index'));
     }
@@ -78,7 +84,7 @@ class PostsController extends Controller
      */
     public function edit(Post $post)
     {
-        return view('posts.create')->with('post', $post)->with('categories', Category::all());
+        return view('posts.create')->with('post', $post)->with('categories', Category::all())->with('tags', Tag::all());
     }
 
     /**
@@ -90,13 +96,20 @@ class PostsController extends Controller
      */
     public function update(UpdatePostsRequest $request, Post $post)
     {
-        $data = $request->only(['title', 'description', 'content', 'published_at', 'category']);
+        $data = $request->only(['title', 'description', 'content', 'published_at', 'category', 'tags']);
+
         if($request->hasFile('image')){
             $image = $request->image->store('posts');
             $post->deleteImage();
             $data['image'] = $image;
         }
-        $post->category()->associate($request->category);
+
+        if($request->tags){
+            $post->tags()->sync($request->tags);
+        }
+        if($request->category){
+            $post->category()->associate($request->category);
+        }
         $post->update($data);
         session()->flash('success', 'Post Updated Successfully.');
         return redirect(route('posts.index'));
