@@ -48,15 +48,10 @@ class PostsController extends Controller
      */
     public function store(CreatePostsRequest $request)
     {
-        // $image = $request->image->store('posts');
-        $image = $request->file('image');
-        $image_name = $image->getRealPath();
-        // Cloudinaryへアップロード
-        Cloudder::upload($image_name, null);
-        list($width, $height) = getimagesize($image_name);
-        // 直前にアップロードした画像のユニークIDを取得します。
+        $image = $request->file('image')->getRealPath();
+        Cloudder::upload($image, null);
+        list($width, $height) = getimagesize($image);
         $publicId = Cloudder::getPublicId();
-        // URLを生成します
         $imageUrl = Cloudder::show($publicId, [
             'width'     => $width,
             'height'    => $height
@@ -66,6 +61,7 @@ class PostsController extends Controller
             'description' => $request->description,
             'content' => $request->content,
             'image' => $imageUrl,
+            'publicid' => $publicId,
             'published_at' => $request->published_at,
             'category_id' => $request->category,
             'user_id' => auth()->user()->id
@@ -113,18 +109,17 @@ class PostsController extends Controller
         $data = $request->only(['title', 'description', 'content', 'published_at', 'category', 'tags']);
 
         if($request->hasFile('image')){
-            // $image = $request->image->store('posts');
-            $image = $request->file('image');
-            $image_name = $image->getRealPath();
-            Cloudder::upload($image_name, null);
-            list($width, $height) = getimagesize($image_name);
+            Cloudder::destroyImage($post->publicid);
+            $image = $request->file('image')->getRealPath();
+            Cloudder::upload($image, null);
+            list($width, $height) = getimagesize($image);
             $publicId = Cloudder::getPublicId();
             $imageUrl = Cloudder::show($publicId, [
                 'width'     => $width,
                 'height'    => $height
             ]);
-            // $post->deleteImage();
             $data['image'] = $imageUrl;
+            $data['publicid'] = $publicId;
         }
 
         if($request->tags){
@@ -149,7 +144,7 @@ class PostsController extends Controller
         $post = Post::withTrashed()->where('id', $id)->firstOrFail();
 
         if ($post->trashed()) {
-            Storage::delete($post->image);
+            Cloudder::destroyImage($post->publicid);
             $post->forceDelete();
         }
         else {

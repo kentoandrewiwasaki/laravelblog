@@ -90,8 +90,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/select2.min.js"></script>
   <script>
     flatpickr('#published_at', {
-      enableTime: true
-      enableSeconds: true
+      enableTime: true,
+      enableSeconds: true,
     });
 
     $(document).ready(function() {
