@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Posts\CreatePostsRequest;
 use App\Http\Requests\Posts\UpdatePostsRequest;
 use Illuminate\Support\Facades\Storage;
+use JD\Cloudder\Facades\Cloudder;
 
 class PostsController extends Controller
 {
@@ -47,12 +48,20 @@ class PostsController extends Controller
      */
     public function store(CreatePostsRequest $request)
     {
-        $image = $request->image->store('posts');
+        $image = $request->file('image')->getRealPath();
+        Cloudder::upload($image, null);
+        list($width, $height) = getimagesize($image);
+        $publicId = Cloudder::getPublicId();
+        $imageUrl = Cloudder::show($publicId, [
+            'width'     => $width,
+            'height'    => $height
+        ]);
         $post = Post::create([
             'title' => $request->title,
             'description' => $request->description,
             'content' => $request->content,
-            'image' => $image,
+            'image' => $imageUrl,
+            'publicid' => $publicId,
             'published_at' => $request->published_at,
             'category_id' => $request->category,
             'user_id' => auth()->user()->id
@@ -100,9 +109,17 @@ class PostsController extends Controller
         $data = $request->only(['title', 'description', 'content', 'published_at', 'category', 'tags']);
 
         if($request->hasFile('image')){
-            $image = $request->image->store('posts');
-            $post->deleteImage();
-            $data['image'] = $image;
+            Cloudder::destroyImage($post->publicid);
+            $image = $request->file('image')->getRealPath();
+            Cloudder::upload($image, null);
+            list($width, $height) = getimagesize($image);
+            $publicId = Cloudder::getPublicId();
+            $imageUrl = Cloudder::show($publicId, [
+                'width'     => $width,
+                'height'    => $height
+            ]);
+            $data['image'] = $imageUrl;
+            $data['publicid'] = $publicId;
         }
 
         if($request->tags){
@@ -127,7 +144,7 @@ class PostsController extends Controller
         $post = Post::withTrashed()->where('id', $id)->firstOrFail();
 
         if ($post->trashed()) {
-            Storage::delete($post->image);
+            Cloudder::destroyImage($post->publicid);
             $post->forceDelete();
         }
         else {
