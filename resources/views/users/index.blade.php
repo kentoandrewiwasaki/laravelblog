@@ -8,7 +8,7 @@
       @if($users->count() > 0)
         <table class="table">
           <thead>
-            <th>Image</th>
+            <th>Avatar</th>
             <th>Name</th>
             <th>Email</th>
             <th></th>
@@ -18,7 +18,7 @@
             @foreach($users as $user)
               <tr>
                 <td>
-
+                  <img width="40px" height="40px" style="border-radius: 50%" src="{{ Gravatar::src($user->email) }}" alt="">
                 </td>
                 <td>
                   {{ $user->name }}
