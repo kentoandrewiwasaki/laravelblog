@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Posts\CreatePostsRequest;
 use App\Http\Requests\Posts\UpdatePostsRequest;
 use Illuminate\Support\Facades\Storage;
+use JD\Cloudder\Facades\Cloudder;
 
 class PostsController extends Controller
 {
@@ -47,12 +48,24 @@ class PostsController extends Controller
      */
     public function store(CreatePostsRequest $request)
     {
-        $image = $request->image->store('posts');
+        // $image = $request->image->store('posts');
+        $image = $request->file('image');
+        $image_name = $image->getRealPath();
+        // Cloudinaryへアップロード
+        Cloudder::upload($image_name, null);
+        list($width, $height) = getimagesize($image_name);
+        // 直前にアップロードした画像のユニークIDを取得します。
+        $publicId = Cloudder::getPublicId();
+        // URLを生成します
+        $imageUrl = Cloudder::show($publicId, [
+            'width'     => $width,
+            'height'    => $height
+        ]);
         $post = Post::create([
             'title' => $request->title,
             'description' => $request->description,
             'content' => $request->content,
-            'image' => $image,
+            'image' => $imageUrl,
             'published_at' => $request->published_at,
             'category_id' => $request->category,
             'user_id' => auth()->user()->id
@@ -100,9 +113,18 @@ class PostsController extends Controller
         $data = $request->only(['title', 'description', 'content', 'published_at', 'category', 'tags']);
 
         if($request->hasFile('image')){
-            $image = $request->image->store('posts');
-            $post->deleteImage();
-            $data['image'] = $image;
+            // $image = $request->image->store('posts');
+            $image = $request->file('image');
+            $image_name = $image->getRealPath();
+            Cloudder::upload($image_name, null);
+            list($width, $height) = getimagesize($image_name);
+            $publicId = Cloudder::getPublicId();
+            $imageUrl = Cloudder::show($publicId, [
+                'width'     => $width,
+                'height'    => $height
+            ]);
+            // $post->deleteImage();
+            $data['image'] = $imageUrl;
         }
 
         if($request->tags){
