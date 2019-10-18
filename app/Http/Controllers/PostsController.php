@@ -58,7 +58,6 @@ class PostsController extends Controller
         ]);
         $post = Post::create([
             'title' => $request->title,
-            'description' => $request->description,
             'content' => $request->content,
             'image' => $imageUrl,
             'publicid' => $publicId,
@@ -106,7 +105,7 @@ class PostsController extends Controller
      */
     public function update(UpdatePostsRequest $request, Post $post)
     {
-        $data = $request->only(['title', 'description', 'content', 'published_at', 'category', 'tags']);
+        $data = $request->only(['title', 'content', 'published_at', 'category', 'tags']);
 
         if($request->hasFile('image')){
             Cloudder::destroyImage($post->publicid);

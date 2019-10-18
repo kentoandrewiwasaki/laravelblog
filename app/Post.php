@@ -15,7 +15,7 @@ class Post extends Model
     ];
 
     protected $fillable = [
-        'title', 'description', 'content', 'image', 'publicid', 'published_at', 'category_id', 'user_id'
+        'title', 'content', 'image', 'publicid', 'published_at', 'category_id', 'user_id'
     ];
 
     public function category()
