@@ -35,7 +35,7 @@
           </ul>
         </section>
 
-        <a class="btn btn-xs btn-round btn-success" href="{{ route('login') }}">LogIn</a>
+        <a class="btn btn-xs btn-round btn-success" href="{{ route('login') }}">Create Posts</a>
 
       </div>
     </nav>
