@@ -38,7 +38,7 @@
                 <div class="col-md-6">
                   <div class="card border hover-shadow-6 mb-6 d-block">
                     <a href="{{ route('blog.show', $post->id) }}">
-                      <img class="card-img-top" src="{{ asset('storage/'.$post->image) }}" alt="Card image cap">
+                      <img class="card-img-top" src="{{ $post->image }}" alt="Card image cap">
                     </a>
                     <div class="p-6 text-center">
                       <p>
