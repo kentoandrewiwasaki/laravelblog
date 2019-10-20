@@ -9,6 +9,7 @@ use App\Tag;
 use Illuminate\Http\Request;
 use App\Http\Requests\Posts\CreatePostsRequest;
 use App\Http\Requests\Posts\UpdatePostsRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use JD\Cloudder\Facades\Cloudder;
 
@@ -27,7 +28,8 @@ class PostsController extends Controller
      */
     public function index()
     {
-        return view('posts.index')->with('posts', Post::all());
+        $current_user_id = Auth::id();
+        return view('posts.index')->with('posts', Post::all()->where('user_id', $current_user_id));
     }
 
     /**
@@ -93,6 +95,10 @@ class PostsController extends Controller
      */
     public function edit(Post $post)
     {
+        $current_user_id = Auth::id();
+        if ($post->user_id != $current_user_id){
+            return redirect()->back();
+        }
         return view('posts.create')->with('post', $post)->with('categories', Category::all())->with('tags', Tag::all());
     }
 
